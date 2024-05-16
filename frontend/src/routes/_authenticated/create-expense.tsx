@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useForm } from '@tanstack/react-form';
 import { api } from '@/lib/api';
-import { Textarea } from '../components/ui/textarea';
-export const Route = createFileRoute('/create-expense')({
+import { Textarea } from '@/components/ui/textarea';
+export const Route = createFileRoute('/_authenticated/create-expense')({
   component: CreateExpense,
 });
 
