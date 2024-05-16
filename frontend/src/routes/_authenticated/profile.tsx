@@ -17,12 +17,6 @@ function Profile() {
   return (
     <div className="p-2">
       <div className="flex items-center gap-2">
-        {/* <Avatar>
-          {data.user.picture && (
-            <AvatarImage src={data.user.picture} alt={data.user.given_name} />
-          )}
-          <AvatarFallback>{data.user.given_name}</AvatarFallback>
-        </Avatar> */}
         <p>
           {data.user.given_name} {data.user.family_name}
         </p>
