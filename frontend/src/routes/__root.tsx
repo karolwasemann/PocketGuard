@@ -3,7 +3,6 @@ import {
   Link,
   Outlet,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { type QueryClient } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -46,7 +45,6 @@ function Root() {
       <hr />
       <Outlet />
       <Toaster />
-      <TanStackRouterDevtools />
     </>
   );
 }
