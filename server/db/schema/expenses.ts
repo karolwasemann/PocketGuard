@@ -7,7 +7,7 @@ import {
   timestamp,
   date,
 } from 'drizzle-orm/pg-core';
-// import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 export const expenses = pgTable(
@@ -28,14 +28,20 @@ export const expenses = pgTable(
   }
 );
 
-// // Schema for inserting a user - can be used to validate API requests
-// export const insertExpensesSchema = createInsertSchema(expenses, {
-//   title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
-//   amount: z
-//     .string()
-//     .regex(/^\d+(\.\d{1,2})?$/, {
-//       message: 'Amount must be a valid monetary value',
-//     }),
-// });
-// // Schema for selecting a Expenses - can be used to validate API responses
-// export const selectExpensesSchema = createSelectSchema(expenses);
+export const insertExpensesSchema = createInsertSchema(expenses, {
+  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  description: z
+    .string()
+    .max(255, { message: 'Description is to long' })
+    .optional(),
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, {
+    message: 'Amount must be a valid monetary value',
+  }),
+});
+
+export const expenseSchema = createSelectSchema(expenses, {
+  createdAt: z.string(),
+  date: z.string(),
+});
+
+export const selectExpensesSchema = createSelectSchema(expenses);
