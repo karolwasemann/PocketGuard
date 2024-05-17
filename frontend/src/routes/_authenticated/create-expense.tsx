@@ -16,10 +16,9 @@ function CreateExpense() {
     defaultValues: {
       title: '',
       description: '',
-      amount: 0,
+      amount: '0',
     },
     onSubmit: async ({ value }) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       const res = await api.expenses.$post({ json: value });
       if (!res.ok) throw new Error('Failed to create expense');
       navigate({ to: '/expenses' });
@@ -84,7 +83,7 @@ function CreateExpense() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 type="number"
-                onChange={(e) => field.handleChange(+e.target.value)}
+                onChange={(e) => field.handleChange(e.target.value)}
               />
               {field.state.meta.touchedErrors ? (
                 <em>{field.state.meta.touchedErrors}</em>

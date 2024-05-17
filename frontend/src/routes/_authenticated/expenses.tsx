@@ -17,7 +17,6 @@ export const Route = createFileRoute('/_authenticated/expenses')({
 });
 
 const getAllExpenses = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
   const res = await api.expenses.$get();
   if (!res.ok) throw new Error('Failed to fetch total spent');
   const data = await res.json();

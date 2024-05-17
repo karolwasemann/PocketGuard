@@ -2,63 +2,77 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { getUser } from '../kinde';
-
+import { db } from '../db';
+import { expenses as expensesTable } from '../db/schema/expenses';
+import { eq, desc, sum, and } from 'drizzle-orm';
 const expenseSchema = z.object({
   id: z.number(),
   title: z.string(),
-  amount: z.number(),
+  amount: z.string(),
   description: z.string(),
 });
 type Expense = z.infer<typeof expenseSchema>;
 const createPostSchema = expenseSchema.omit({ id: true });
-const fakeExpenses: Expense[] = [
-  {
-    id: 1,
-    title: 'Expense 1',
-    amount: 10,
-    description: 'First expense',
-  },
-  {
-    id: 2,
-    title: 'Expense 2',
-    amount: 20,
-    description: 'Second expense',
-  },
-  {
-    id: 3,
-    title: 'Expense 3',
-    amount: 30,
-    description: 'Third expense',
-  },
-];
 
 export const expensesRoute = new Hono()
-  .get('/', getUser, (c) => c.json({ expenses: fakeExpenses }))
+  .get('/', getUser, async (c) => {
+    const user = c.var.user;
+    const expenses = await db
+      .select()
+      .from(expensesTable)
+      .where(eq(expensesTable.userId, user.id))
+      .orderBy(desc(expensesTable.createdAt))
+      .limit(100);
+
+    return c.json({ expenses });
+  })
   .post('/', getUser, zValidator('json', createPostSchema), async (c) => {
-    const data = await c.req.valid('json');
-    const expense = createPostSchema.parse(data);
-    fakeExpenses.push({ ...expense, id: fakeExpenses.length + 1 });
+    const user = c.var.user;
+    const expense = await c.req.valid('json');
+    const result = await db
+      .insert(expensesTable)
+      .values({ ...expense, userId: user.id, date: new Date().toISOString() })
+      .returning();
+
     c.status(201);
     return c.json(expense);
   })
   .get('/total-spent', getUser, async (c) => {
-    const total = fakeExpenses.reduce((acc, e) => acc + e.amount, 0);
-    return c.json({ total });
+    const user = c.var.user;
+    const result = await db
+      .select({ total: sum(expensesTable.amount) })
+      .from(expensesTable)
+      .where(eq(expensesTable.userId, user.id))
+      .limit(1)
+      .then((r) => r[0]);
+
+    return c.json(result);
   })
-  .get('/:id{[0-9]+}', getUser, (c) => {
+  .get('/:id{[0-9]+}', getUser, async (c) => {
     const id = Number.parseInt(c.req.param('id'));
-    const expense = fakeExpenses.find((e) => e.id === id);
+    const user = c.var.user;
+    const expense = await db
+      .select()
+      .from(expensesTable)
+      .where(and(eq(expensesTable.userId, user.id), eq(expensesTable.id, id)))
+      .then((r) => r[0]);
+
     if (!expense) {
       return c.notFound();
     }
     return c.json({ expense });
   })
-  .delete('/:id{[0-9]+}', getUser, (c) => {
+  .delete('/:id{[0-9]+}', getUser, async (c) => {
+    const user = c.var.user;
     const id = Number.parseInt(c.req.param('id'));
-    const index = fakeExpenses.findIndex((e) => e.id === id);
-    if (index === -1) {
+    const expense = await db
+      .delete(expensesTable)
+      .where(and(eq(expensesTable.userId, user.id), eq(expensesTable.id, id)))
+      .returning()
+      .then((r) => r[0]);
+
+    if (!expense) {
       return c.notFound();
     }
-    const deletedExpense = fakeExpenses.splice(index, 1)[0];
-    return c.json({ message: 'Expense deleted', expense: deletedExpense });
+    return c.json({ expense: expense });
   });
