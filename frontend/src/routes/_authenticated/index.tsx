@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+import { GoalProgressbar } from '@/components/GoalProgressbar';
 
 export const Route = createFileRoute('/_authenticated/')({
   component: Index,
@@ -27,12 +28,15 @@ function Index() {
 
   if (error) return 'An error has occurred: ' + error.message;
   return (
-    <Card className="w-[350px] m-auto">
-      <CardHeader>
-        <CardTitle>Total Spent:</CardTitle>
-        <CardDescription>The total amount you've spent.</CardDescription>
-      </CardHeader>
-      <CardContent>{isPending ? '....' : data.total}</CardContent>
-    </Card>
+    <div className=" flex  flex-col gap-y-8 my-4">
+      <Card className="w-[350px] m-auto">
+        <CardHeader>
+          <CardTitle>Total Spent:</CardTitle>
+          <CardDescription>The total amount you've spent.</CardDescription>
+        </CardHeader>
+        <CardContent>{isPending ? '....' : data.total}</CardContent>
+      </Card>
+      <GoalProgressbar />
+    </div>
   );
 }

@@ -62,3 +62,17 @@ export const deleteExpense = async ({ id }: { id: number }) => {
   const deletedExpense = await res.json();
   return deletedExpense;
 };
+
+export const getSpentGoal = async () => {
+  const res = await api.expenses['spent-goal'].$get();
+  if (!res.ok) throw new Error('Failed to fetch total spent');
+  const data = await res.json();
+  return data;
+};
+
+export const updateSpentGoal = async ({ spentGoal }: { spentGoal: number }) => {
+  const res = await api.expenses['spent-goal'].$post({ json: { spentGoal } });
+  if (!res.ok) throw new Error('Failed to update spent goal');
+  const data = await res.json();
+  return data;
+};

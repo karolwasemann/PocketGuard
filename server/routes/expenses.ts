@@ -6,9 +6,11 @@ import { db } from '../db';
 import {
   expenses as expensesTable,
   insertExpensesSchema,
+  insertSpentGoalSchema,
+  spentGoal as spentGoalTable,
 } from '../db/schema/expenses';
 import { eq, desc, sum, and } from 'drizzle-orm';
-import { createExpenseSchema } from '../sharedTypes';
+import { createExpenseSchema, createSpentGoalSchema } from '../sharedTypes';
 
 export const expensesRoute = new Hono()
   .get('/', getUser, async (c) => {
@@ -77,4 +79,60 @@ export const expensesRoute = new Hono()
       return c.notFound();
     }
     return c.json({ expense: expense });
-  });
+  })
+  .get('/spent-goal', getUser, async (c) => {
+    const user = c.var.user;
+    const spentGoal = await db
+      .select()
+      .from(spentGoalTable)
+      .where(eq(spentGoalTable.userId, user.id))
+      .limit(1)
+      .then((r) => r[0]);
+    console.log('🚀 ~ .get ~ spentGoal:', spentGoal);
+
+    return c.json(spentGoal);
+  })
+  .post(
+    '/spent-goal',
+    getUser,
+    zValidator('json', createSpentGoalSchema),
+    async (c) => {
+      const user = c.var.user;
+      const newSpentGoalData = c.req.valid('json');
+
+      // First, try to find an existing spent-goal for this user
+      const existingSpentGoal = await db
+        .select()
+        .from(spentGoalTable)
+        .where(eq(spentGoalTable.userId, user.id))
+        .limit(1)
+        .then((res) => res[0]);
+
+      let result;
+      if (existingSpentGoal) {
+        // If a spent-goal exists, update it
+        result = await db
+          .update(spentGoalTable)
+          .set({ spentGoal: newSpentGoalData.spentGoal })
+          .where(eq(spentGoalTable.id, existingSpentGoal.id))
+          .returning()
+          .then((res) => res[0]);
+        console.log('Updated existing spent-goal:', result);
+      } else {
+        // If no spent-goal exists, insert a new one
+        const validatedSpentGoal = insertSpentGoalSchema.parse({
+          ...newSpentGoalData,
+          userId: user.id,
+        });
+        result = await db
+          .insert(spentGoalTable)
+          .values(validatedSpentGoal)
+          .returning()
+          .then((res) => res[0]);
+        console.log('Inserted new spent-goal:', result);
+      }
+
+      c.status(201);
+      return c.json(result);
+    }
+  );

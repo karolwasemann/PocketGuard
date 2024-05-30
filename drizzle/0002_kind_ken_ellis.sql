@@ -1,0 +1,1 @@
+ALTER TABLE "spentGoal" ALTER COLUMN "spent_goal" SET DATA TYPE integer;

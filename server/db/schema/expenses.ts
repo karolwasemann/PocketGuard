@@ -6,6 +6,7 @@ import {
   index,
   timestamp,
   date,
+  integer,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -37,6 +38,25 @@ export const insertExpensesSchema = createInsertSchema(expenses, {
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, {
     message: 'Amount must be a valid monetary value',
   }),
+});
+
+export const spentGoal = pgTable(
+  'spentGoal',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    spentGoal: integer('spent_goal').notNull().default(0),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (spentGoal) => {
+    return {
+      userIdIndex: index('goal_idx').on(spentGoal.userId),
+    };
+  }
+);
+
+export const insertSpentGoalSchema = createInsertSchema(spentGoal, {
+  spentGoal: z.number().nonnegative().default(0),
 });
 
 export const expenseSchema = createSelectSchema(expenses, {
