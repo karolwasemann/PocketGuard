@@ -11,9 +11,10 @@ import { Input } from '@/components/ui/input';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getSpentGoal, updateSpentGoal } from '@/lib/api';
 import { toast } from 'sonner';
+import { Skeleton } from './ui/skeleton';
 
 export const GoalProgressbar = () => {
-  const { error, data } = useQuery({
+  const { isPending, error, data } = useQuery({
     queryKey: ['get-spent-goal'],
     queryFn: getSpentGoal,
   });
@@ -65,23 +66,32 @@ export const GoalProgressbar = () => {
       </CardHeader>
 
       <CardContent className="text-lg flex flex-col items-center gap-y-6">
-        <Input
-          className="w-[100px] text-center"
-          type="number"
-          max={10000}
-          step={25}
-          defaultValue={spentGoal}
-          value={spentGoal}
-          placeholder="Spent Goal"
-          onChange={(e) => handleChange(+e.target.value)}
-        />
-        <Slider
-          defaultValue={[spentGoal]}
-          max={10000}
-          step={25}
-          onValueChange={(e) => handleChange(+e[0])}
-          value={[spentGoal]}
-        />
+        {isPending ? (
+          <>
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-4 w-72" />
+          </>
+        ) : (
+          <>
+            <Input
+              className="w-[100px] text-center"
+              type="number"
+              max={10000}
+              step={25}
+              defaultValue={spentGoal}
+              value={spentGoal}
+              placeholder="Spent Goal"
+              onChange={(e) => handleChange(+e.target.value)}
+            />
+            <Slider
+              defaultValue={[spentGoal]}
+              max={10000}
+              step={25}
+              onValueChange={(e) => handleChange(+e[0])}
+              value={[spentGoal]}
+            />
+          </>
+        )}
       </CardContent>
     </Card>
   );
